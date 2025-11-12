@@ -1,211 +1,262 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Access Terminal</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory Access</title>
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg1: #000000;
-    --bg2: #150202;
     --accent: #ff2b2b;
-    --accent-glow: rgba(255, 43, 43, 0.25);
-    --text: #ff7a7a;
+    --text: #ffb3b3;
   }
-
-  html,body {
-    height: 100%;
-    margin: 0;
-    font-family: "Special Elite", "Courier New", monospace;
-    background: radial-gradient(circle at 50% 40%, var(--bg1) 0%, var(--bg2) 100%);
+  html, body {
+    margin: 0; height: 100%;
+    font-family: 'Special Elite', monospace;
+    background: #000;
     color: var(--text);
     overflow: hidden;
   }
 
-  /* Canvas nền số */
   #matrixCanvas {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    background: radial-gradient(circle at center, #000, #100);
+    position: fixed; inset: 0; z-index: 1;
+    background: #000;
   }
-
-  /* Lớp scanline mờ */
   .scan {
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
+    position: fixed; inset: 0; z-index: 2;
     background: repeating-linear-gradient(
       to bottom,
-      rgba(255, 0, 0, 0.04) 0px,
-      rgba(255, 0, 0, 0.07) 2px,
+      rgba(255,0,0,0.03) 0px,
+      rgba(255,0,0,0.06) 2px,
       transparent 4px,
       transparent 6px
     );
-    mix-blend-mode: screen;
     animation: scanMove 6s linear infinite;
-    opacity: 0.5;
+    opacity: 0.4;
+    pointer-events:none;
   }
-  @keyframes scanMove {
-    from { transform: translateY(-100%); }
-    to   { transform: translateY(100%); }
-  }
+  @keyframes scanMove { from{transform:translateY(-100%);} to{transform:translateY(100%);} }
 
   .wrap {
-    position: relative;
-    z-index: 10;
-    min-height: 100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    gap:15px;
-    padding: 24px;
+    position: relative; z-index: 10;
+    height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; gap: 15px;
   }
 
   h2 {
-    font-size: 2.1rem;
+    font-size: 2rem;
     color: var(--accent);
-    text-shadow: 0 0 10px var(--accent), 0 0 30px rgba(170,0,0,0.6);
-    letter-spacing: 3px;
+    text-shadow: 0 0 10px var(--accent),0 0 30px rgba(255,0,0,0.7);
     animation: flicker 3s infinite;
+    letter-spacing: 3px;
   }
   @keyframes flicker {
-    0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
-    20%, 24%, 55% { opacity: 0.4; }
+    0%,18%,22%,25%,53%,57%,100%{opacity:1;}
+    20%,24%,55%{opacity:0.4;}
   }
 
   #passwordInput {
-    font-size: 1.4rem;
-    width: 260px;
+    font-size: 1.3rem;
+    width: 250px;
     padding: 10px 18px;
     border-radius: 6px;
     border: 2px solid var(--accent);
-    background: linear-gradient(180deg,#080202, #100000);
+    background: #111;
     color: var(--text);
-    text-align:center;
-    letter-spacing: 12px;
+    text-align: center;
+    letter-spacing: 10px;
     outline: none;
-    box-shadow: 0 0 24px var(--accent-glow), inset 0 0 6px rgba(0,0,0,0.6);
+    box-shadow: 0 0 24px rgba(255,0,0,0.25);
   }
-
   button {
     padding: 10px 28px;
     font-size: 1rem;
-    border-radius:6px;
     border: 2px solid var(--accent);
     background: transparent;
     color: var(--accent);
+    border-radius: 6px;
     cursor: pointer;
-    box-shadow: 0 0 18px var(--accent-glow);
+    box-shadow: 0 0 18px rgba(255,0,0,0.25);
     transition: 0.2s;
   }
   button:hover { transform: translateY(-2px); }
 
   #message {
     height: 28px;
-    color: #ff5555;
-    text-shadow: 0 0 8px rgba(255,50,50,0.6);
-    font-weight: 700;
+    color: #ff6666;
+    font-weight: bold;
+    text-shadow: 0 0 8px #ff0000;
   }
 
-  #videoContainer {
-    margin-top: 24px;
+  /* Phần nội dung hiện sau khi nhập đúng */
+  #story {
+    position: absolute;
+    inset: 0;
     display: none;
-    z-index: 11;
-    border: 3px solid var(--accent);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 0 40px rgba(255,40,40,0.18);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    color: #fceaea;
+    font-size: 1.3rem;
+    padding: 40px;
+    line-height: 1.8;
+    background: rgba(0,0,0,0.85);
+    z-index: 20;
   }
-  video { display:block; max-width:90vw; height:auto; }
+
+  #finalMessage {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: #000;
+    color: #ff4d4d;
+    font-size: 2rem;
+    font-weight: bold;
+    justify-content: center;
+    align-items: center;
+    z-index: 30;
+    text-shadow: 0 0 15px #ff0000;
+    flex-direction: column;
+    animation: fadein 2s ease forwards;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 </style>
 </head>
 <body>
 <canvas id="matrixCanvas"></canvas>
 <div class="scan"></div>
 
-<main class="wrap">
+<div class="wrap" id="inputScreen">
   <h2>ENTER PASSWORD</h2>
   <input id="passwordInput" type="text" maxlength="4" autocomplete="off" placeholder="____" />
-  <div><button id="btn" type="button">XÁC NHẬN</button></div>
+  <button id="btn">XÁC NHẬN</button>
   <div id="message"></div>
+</div>
 
-  <div id="videoContainer">
-    <video id="theVideo" controls>
-      <source src="your-video.mp4" type="video/mp4">
-    </video>
-  </div>
-</main>
+<div id="story">
+  <p id="storyText"></p>
+</div>
+
+<div id="finalMessage">
+  <p>Chúc mừng – Các anh đã giải thoát nhà số 19.<br>Happy 19/11 💥</p>
+</div>
+
+<!-- Âm nền rợn -->
+<audio id="bgAudio" loop autoplay muted>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2ec03a6d48.mp3?filename=horror-ambience-6981.mp3" type="audio/mp3">
+</audio>
+
+<!-- Nhạc nhẹ lúc kết -->
+<audio id="softAudio">
+  <source src="https://cdn.pixabay.com/download/audio/2022/10/18/audio_d6e6d598e9.mp3?filename=emotional-ambient-123064.mp3" type="audio/mp3">
+</audio>
 
 <script>
-/* ========== MATRIX BACKGROUND ========== */
-const canvas = document.getElementById("matrixCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-const chars = "01ABCDEFGHJKLMNOPQRSTUVWXYZ!?$#@%".split("");
-const fontSize = 16;
-const columns = Math.floor(canvas.width / fontSize);
-const drops = Array(columns).fill(0);
-function drawMatrix() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "rgba(255, 0, 0, 0.7)";
-  ctx.font = fontSize + "px monospace";
-  for (let i = 0; i < drops.length; i++) {
-    const text = chars[Math.floor(Math.random() * chars.length)];
-    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+/* Hiệu ứng nền số rơi */
+const canvas=document.getElementById("matrixCanvas");
+const ctx=canvas.getContext("2d");
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+const chars="01ABCDEFGHJKLMNOPQRSTUVWXYZ!?$#@%".split("");
+const fontSize=16;
+const columns=Math.floor(canvas.width/fontSize);
+const drops=Array(columns).fill(0);
+function drawMatrix(){
+  ctx.fillStyle="rgba(0,0,0,0.1)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="rgba(255,0,0,0.6)";
+  ctx.font=fontSize+"px monospace";
+  for(let i=0;i<drops.length;i++){
+    const text=chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+    if(drops[i]*fontSize>canvas.height&&Math.random()>0.975)drops[i]=0;
     drops[i]++;
   }
 }
-setInterval(drawMatrix, 50);
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
+setInterval(drawMatrix,50);
 
-/* ========== PASSWORD CHECK ========== */
-const correctPassword = "aris";
-const input = document.getElementById('passwordInput');
-const btn = document.getElementById('btn');
-const msg = document.getElementById('message');
-const vidBox = document.getElementById('videoContainer');
-const video = document.getElementById('theVideo');
+/* Logic nhập mật khẩu */
+const correctPassword="aris";
+const input=document.getElementById("passwordInput");
+const btn=document.getElementById("btn");
+const msg=document.getElementById("message");
+const inputScreen=document.getElementById("inputScreen");
+const story=document.getElementById("story");
+const storyText=document.getElementById("storyText");
+const finalMessage=document.getElementById("finalMessage");
+const bgAudio=document.getElementById("bgAudio");
+const softAudio=document.getElementById("softAudio");
 
-input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPassword(); });
-btn.addEventListener('click', checkPassword);
+btn.onclick = checkPassword;
+input.addEventListener("keydown",e=>{if(e.key==="Enter")checkPassword();});
 
-function checkPassword() {
-  const val = input.value.trim().toLowerCase();
-  if (val.length !== 4) {
-    msg.textContent = "Mật khẩu phải có 4 chữ cái!";
-    vidBox.style.display = 'none';
-    return;
-  }
-  if (val === correctPassword) {
-    msg.textContent = "";
-    vidBox.style.display = 'block';
-    try { video.currentTime = 0; video.play(); } catch(e){}
+function checkPassword(){
+  const val=input.value.trim().toLowerCase();
+  if(val===correctPassword){
+    msg.textContent="";
+    inputScreen.style.display="none";
+    showStory();
   } else {
-    msg.textContent = "⚠ TRUY CẬP BỊ TỪ CHỐI ⚠";
-    vidBox.style.display = 'none';
-    input.value = '';
-    input.focus();
-    shake();
+    msg.textContent="⚠ TRUY CẬP BỊ TỪ CHỐI ⚠";
+    input.value="";
   }
 }
-function shake() {
-  const wrap = document.querySelector('.wrap');
-  wrap.style.transition = 'transform 0.15s';
-  wrap.style.transform = 'translateX(-6px)';
-  setTimeout(()=> wrap.style.transform = 'translateX(6px)', 150);
-  setTimeout(()=> wrap.style.transform = 'translateX(0)', 300);
+
+/* Hiện nội dung ký ức */
+const lines = [
+  "Các con… chỉ là những mảnh trong ta.",
+  "Một phần mạnh mẽ, một phần yếu đuối, một phần mộng mơ, một phần sợ hãi.",
+  "Khi ngôi nhà sập xuống, ta bị chia tách… và kẹt lại đây.",
+  "Cảm ơn vì đã nhớ đến ngày 19/11.",
+  "Hãy sống, thay cho chúng ta."
+];
+
+function showStory(){
+  story.style.display="flex";
+  bgAudio.volume=0.3;
+  bgAudio.muted=false;
+  bgAudio.play().catch(()=>{});
+  let i=0;
+  function nextLine(){
+    if(i<lines.length){
+      storyText.textContent=lines[i];
+      storyText.style.opacity=0;
+      storyText.animate([{opacity:0},{opacity:1}],{duration:2000,fill:"forwards"});
+      i++;
+      setTimeout(nextLine,4000);
+    } else {
+      fadeOutStory();
+    }
+  }
+  nextLine();
 }
+
+function fadeOutStory(){
+  story.animate([{opacity:1},{opacity:0}],{duration:4000,fill:"forwards"});
+  setTimeout(()=>{
+    story.style.display="none";
+    bgAudio.pause();
+    softAudio.volume=0.4;
+    softAudio.play().catch(()=>{});
+    finalMessage.style.display="flex";
+  },4000);
+}
+
+/* Bật âm nền khi click */
+document.body.addEventListener('click',()=>{
+  if(bgAudio.muted){
+    bgAudio.muted=false;
+    bgAudio.volume=0.3;
+    bgAudio.play().catch(()=>{});
+  }
+},{once:true});
 </script>
 </body>
 </html>
